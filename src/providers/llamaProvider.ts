@@ -49,6 +49,11 @@ export class LlamaProvider implements LLMProvider {
   }
 
   async isAvailable(): Promise<boolean> {
+    // Only available on localhost
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+      return false;
+    }
+    
     try {
       const response = await fetch(`${this.baseUrl}/api/tags`, {
         method: 'GET',
