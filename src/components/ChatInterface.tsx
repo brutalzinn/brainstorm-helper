@@ -120,6 +120,7 @@ interface ChatInterfaceProps {
   autoProcess: boolean;
   onToggleAutoProcess: () => void;
   onProcessQueue: () => void;
+  getAvailableModels: () => string[];
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -137,6 +138,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   autoProcess,
   onToggleAutoProcess,
   onProcessQueue,
+  getAvailableModels,
 }) => {
   const [input, setInput] = useState('');
   const [brainstormResult, setBrainstormResult] = useState('');
@@ -148,6 +150,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [showQueue, setShowQueue] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [apiKeyUsed, setApiKeyUsed] = useState(false);
   const [llmConfig, setLLMConfig] = useState<LLMConfig>({
     provider: 'llama',
     model: 'llama3.1',
@@ -221,7 +224,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleApiKeySubmit = useCallback(() => {
     if (apiKey.trim()) {
       onUpdateApiKey(apiKey.trim());
-      setShowSettings(false);
+      setApiKeyUsed(true);
+      setHasConfiguredLLM(true);
+      // Keep settings open so user can configure the model
     }
   }, [apiKey, onUpdateApiKey]);
 
@@ -483,7 +488,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <Collapse in={showSettings}>
         <Card className="bg-secondary border-secondary rounded-0">
           <Card.Body>
-            <h6 className="text-white mb-3">Settings & Configuration</h6>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="text-white mb-0">Settings & Configuration</h6>
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => setShowSettings(false)}
+                className="text-white"
+              >
+                Close
+              </Button>
+            </div>
             
             {/* LLM Configuration */}
             <div className="mb-3">
@@ -545,6 +560,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <Form.Text className="text-warning">
                     <strong>Security:</strong> API keys are never stored and only used for the current session.
                   </Form.Text>
+                  {apiKeyUsed && (
+                    <Alert variant="success" className="mt-2">
+                      <CheckCircle size={16} className="me-2" />
+                      API key configured successfully! Now select your preferred model below.
+                    </Alert>
+                  )}
                 </div>
               )}
 
@@ -556,28 +577,43 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onChange={(e) => setLLMConfig(prev => ({ ...prev, model: e.target.value }))}
                   className="bg-dark text-white border-secondary"
                 >
-                  {currentProvider === 'llama' ? (
-                    <option value="llama3.1">llama3.1 (Default)</option>
-                  ) : currentProvider === 'gemini' ? (
-                    <>
-                      <option value="gemini-1.5-flash">gemini-1.5-flash (Fast)</option>
-                      <option value="gemini-1.5-pro">gemini-1.5-pro (Advanced)</option>
-                      <option value="gemini-pro">gemini-pro (Legacy)</option>
-                    </>
-                  ) : currentProvider === 'openai' ? (
-                    <>
-                      <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-                      <option value="gpt-4">gpt-4</option>
-                      <option value="gpt-4-turbo">gpt-4-turbo</option>
-                    </>
-                  ) : (
-                    <option value="default">Default Model</option>
-                  )}
+                  {(() => {
+                    const availableModels = getAvailableModels();
+                    if (availableModels.length > 0) {
+                      return availableModels.map((model) => {
+                        // Create user-friendly display names
+                        let displayName = model;
+                        if (model.includes('gemini-2.5-pro')) {
+                          displayName = model.includes('preview') ? `${model} (Preview)` : `${model} (Advanced)`;
+                        } else if (model.includes('gemini-2.5-flash')) {
+                          displayName = model.includes('preview') ? `${model} (Preview)` : `${model} (Fast)`;
+                        } else if (model.includes('gemini-2.0-flash')) {
+                          displayName = model.includes('exp') ? `${model} (Experimental)` : `${model} (Fast)`;
+                        } else if (model.includes('gemini-pro-latest')) {
+                          displayName = `${model} (Latest)`;
+                        } else if (model.includes('gemini-flash-latest')) {
+                          displayName = `${model} (Latest)`;
+                        }
+                        
+                        return (
+                          <option key={model} value={model}>
+                            {displayName}
+                          </option>
+                        );
+                      });
+                    } else if (currentProvider === 'llama') {
+                      return <option value="llama3.1">llama3.1 (Default)</option>;
+                    } else {
+                      return <option value="default">No models available</option>;
+                    }
+                  })()}
                 </Form.Select>
                 <Form.Text className="text-muted">
                   {currentProvider === 'llama' 
                     ? 'Model running on your local Ollama instance'
-                    : `Available models for ${currentProvider}`
+                    : getAvailableModels().length > 0 
+                      ? `Available models for ${currentProvider}`
+                      : 'Click "Use" button to fetch available models'
                   }
                 </Form.Text>
               </div>
@@ -681,37 +717,38 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <h4 className="text-white mb-3">Start Brainstorming!</h4>
               <p className="text-muted mb-4">Share your ideas and I'll help you brainstorm creative solutions.</p>
               
-              {/* Configuration Button - Always Show */}
-              <div className="d-flex justify-content-center mb-3">
-                <Button
-                  variant={hasConfiguredLLM ? "outline-info" : "warning"}
-                  size="lg"
-                  onClick={() => setShowSettings(true)}
-                  className="d-flex align-items-center px-4 py-3"
-                  style={{minHeight: '60px', minWidth: '300px'}}
-                >
-                  <Settings size={20} className="me-3" />
-                  <div className="text-start">
-                    <div className="fw-bold">
-                      {hasConfiguredLLM ? 'Configure LLM Provider' : 'Configure LLM Provider'}
+              {/* Configuration Button - Only show when not configured */}
+              {!hasConfiguredLLM && (
+                <div className="d-flex justify-content-center mb-3">
+                  <Button
+                    variant="warning"
+                    size="lg"
+                    onClick={() => setShowSettings(true)}
+                    className="d-flex align-items-center px-4 py-3"
+                    style={{minHeight: '60px', minWidth: '300px'}}
+                  >
+                    <Settings size={20} className="me-3" />
+                    <div className="text-start">
+                      <div className="fw-bold">
+                        Configure LLM Provider
+                      </div>
+                      <small className="opacity-75">
+                        Click to set up your AI provider
+                      </small>
                     </div>
-                    <small className="opacity-75">
-                      {hasConfiguredLLM 
-                        ? `Currently using ${getProviderDisplayName()} - Click to change` 
-                        : 'Click to set up your AI provider'
-                      }
-                    </small>
-                  </div>
-                </Button>
-              </div>
+                  </Button>
+                </div>
+              )}
 
-              {/* Current Provider Info - Always Show When Provider Selected */}
-              <div className="d-flex justify-content-center">
-                <Alert variant="info" className="d-inline-flex align-items-center">
-                  <Sparkles size={16} className="me-2" />
-                  AI-powered brainstorming with {getProviderDisplayName()}
-                </Alert>
-              </div>
+              {/* Current Provider Info - Only show when configured */}
+              {hasConfiguredLLM && (
+                <div className="d-flex justify-content-center">
+                  <Alert variant="info" className="d-inline-flex align-items-center">
+                    <Sparkles size={16} className="me-2" />
+                    AI-powered brainstorming with {getProviderDisplayName()}
+                  </Alert>
+                </div>
+              )}
           </div>
         ) : (
             <>

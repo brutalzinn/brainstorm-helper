@@ -37,18 +37,19 @@ export const DEFAULT_PROVIDERS: LLMProvider[] = [
     icon: '🦙',
     dynamicModels: true
   },
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    type: 'external',
-    available: false,
-    requiresApiKey: true,
-    requiresUrl: false,
-    supportedModels: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-4o'],
-    defaultModel: 'gpt-4',
-    description: 'OpenAI API',
-    icon: '🤖'
-  },
+  // OpenAI provider disabled
+  // {
+  //   id: 'openai',
+  //   name: 'OpenAI',
+  //   type: 'external',
+  //   available: false,
+  //   requiresApiKey: true,
+  //   requiresUrl: false,
+  //   supportedModels: ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-4o'],
+  //   defaultModel: 'gpt-4',
+  //   description: 'OpenAI API',
+  //   icon: '🤖'
+  // },
   {
     id: 'gemini',
     name: 'Google Gemini',
@@ -59,7 +60,8 @@ export const DEFAULT_PROVIDERS: LLMProvider[] = [
     supportedModels: ['gemini-pro', 'gemini-pro-vision', 'gemini-1.5-pro', 'gemini-1.5-flash'],
     defaultModel: 'gemini-pro',
     description: 'Google Gemini API',
-    icon: '💎'
+    icon: '💎',
+    dynamicModels: true
   },
   {
     id: 'anthropic',

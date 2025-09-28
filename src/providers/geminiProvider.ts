@@ -40,8 +40,8 @@ export class GeminiProvider implements LLMProvider {
   type = 'external' as const;
   baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   apiKey?: string;
-  models = ['gemini-pro', 'gemini-pro-vision'];
-  defaultModel = 'gemini-pro';
+  models: string[] = [];
+  defaultModel = '';
   dynamicModels = true;
 
   constructor(apiKey?: string) {
@@ -50,14 +50,13 @@ export class GeminiProvider implements LLMProvider {
 
   async fetchModels(): Promise<string[]> {
     if (!this.apiKey) {
-      return this.models;
+      throw new Error('API key required to fetch Gemini models');
     }
     
     try {
       const response = await fetch(`${this.baseUrl}/models?key=${this.apiKey}`);
       if (!response.ok) {
-        console.warn('Failed to fetch Gemini models, using defaults');
-        return this.models;
+        throw new Error(`Failed to fetch Gemini models: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
       
@@ -68,21 +67,23 @@ export class GeminiProvider implements LLMProvider {
           model.name?.includes('gemini') && 
           model.supportedGenerationMethods?.includes('generateContent')
         )
-        ?.map((model: { name?: string; baseModelId?: string }) => 
-          model.baseModelId || model.name?.replace('models/', '')
+        ?.map((model: { name?: string }) => 
+          model.name?.replace('models/', '') || ''
         )
         ?.filter((name: string) => name) || [];
       
-      if (geminiModels.length > 0) {
-        this.models = geminiModels;
-        this.defaultModel = geminiModels[0];
-        console.log('Updated Gemini models:', this.models);
+      if (geminiModels.length === 0) {
+        throw new Error('No valid Gemini models found in API response');
       }
+      
+      this.models = geminiModels;
+      this.defaultModel = geminiModels[0];
+      console.log('Updated Gemini models:', this.models);
       
       return this.models;
     } catch (error) {
       console.error('Error fetching Gemini models:', error);
-      return this.models;
+      throw error;
     }
   }
 
@@ -110,6 +111,14 @@ export class GeminiProvider implements LLMProvider {
     
     if (!this.apiKey) {
       throw new Error('Gemini API key not provided');
+    }
+
+    if (!this.models.length || !this.defaultModel) {
+      throw new Error('No models available. Please fetch models first by providing an API key.');
+    }
+
+    if (model && !this.models.includes(model)) {
+      throw new Error(`Model '${model}' not available. Available models: ${this.models.join(', ')}`);
     }
 
     // Convert messages to Gemini format

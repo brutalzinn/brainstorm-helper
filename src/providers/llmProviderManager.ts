@@ -1,6 +1,5 @@
 import { LlamaProvider } from './llamaProvider';
 import { GeminiProvider } from './geminiProvider';
-import { OpenAIProvider } from './openaiProvider';
 
 // Define types directly in this file to avoid import issues
 interface LLMResponse {
@@ -65,8 +64,9 @@ export class LLMProviderManager {
     const geminiProvider = new GeminiProvider(this.config.apiKey);
     this.providers.set('gemini', geminiProvider);
 
-    const openaiProvider = new OpenAIProvider(this.config.apiKey);
-    this.providers.set('openai', openaiProvider);
+    // OpenAI provider disabled
+    // const openaiProvider = new OpenAIProvider(this.config.apiKey);
+    // this.providers.set('openai', openaiProvider);
   }
 
   async fetchModelsForProvider(providerName: string): Promise<string[]> {
@@ -120,9 +120,10 @@ export class LLMProviderManager {
       if (this.providers.has('gemini')) {
         this.providers.set('gemini', new GeminiProvider(newConfig.apiKey));
       }
-      if (this.providers.has('openai')) {
-        this.providers.set('openai', new OpenAIProvider(newConfig.apiKey));
-      }
+      // OpenAI provider disabled
+      // if (this.providers.has('openai')) {
+      //   this.providers.set('openai', new OpenAIProvider(newConfig.apiKey));
+      // }
     }
     if (newConfig.url && this.providers.has('llama')) {
       this.providers.set('llama', new LlamaProvider(newConfig.url));

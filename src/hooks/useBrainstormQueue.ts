@@ -386,10 +386,11 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
     llmManager.updateConfig({ apiKey });
     
     // Fetch models for dynamic providers when API key is provided
-    if (apiKey.trim()) {
+    if (apiKey.trim() && currentProvider === 'gemini') {
       try {
-        const models = await llmManager.fetchModelsForProvider(currentProvider);
-        console.log(`Fetched models for ${currentProvider} with API key:`, models);
+        console.log('Fetching Gemini models with API key...');
+        const models = await llmManager.fetchModelsForProvider('gemini');
+        console.log(`Fetched Gemini models:`, models);
         
         // Update the provider with the fetched models
         const provider = llmManager.getCurrentProvider();
@@ -398,10 +399,10 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
           llmManager.updateConfig({
             model: models[0]
           });
-          console.log('Updated model to:', models[0]);
+          console.log('Updated Gemini model to:', models[0]);
         }
       } catch (error) {
-        console.warn(`Failed to fetch models for ${currentProvider}:`, error);
+        console.warn(`Failed to fetch Gemini models:`, error);
       }
     }
   }, [llmManager, currentProvider]);
@@ -527,6 +528,11 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
     return markdown;
   };
 
+  const getAvailableModels = useCallback(() => {
+    const provider = llmManager.getCurrentProvider();
+    return provider?.models || [];
+  }, [llmManager]);
+
   return {
     messages,
     queue,
@@ -545,6 +551,7 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
     moveMessageUp,
     toggleAutoProcess: () => setAutoProcess(prev => !prev),
     processQueue,
+    getAvailableModels,
   };
 };
 

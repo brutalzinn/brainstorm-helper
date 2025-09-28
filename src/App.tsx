@@ -29,7 +29,8 @@ function App() {
     removeMessage,
     moveMessageUp,
     toggleAutoProcess,
-    processQueue
+    processQueue,
+    getAvailableModels
   } = useBrainstormQueue();
 
   return (
@@ -51,6 +52,7 @@ function App() {
         autoProcess={autoProcess}
         onToggleAutoProcess={toggleAutoProcess}
         onProcessQueue={processQueue}
+        getAvailableModels={getAvailableModels}
       />
     </Container>
   );

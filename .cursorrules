@@ -7,6 +7,12 @@
 - Use TypeScript strict typing
 - Follow React best practices with hooks
 
+## Git & Version Control
+- NEVER make automatic commits or pushes
+- Always check for linting errors before suggesting commits
+- Only suggest commits when code is valid and tested
+- Ask user before committing any changes
+
 ## Security
 - NEVER store API keys in localStorage or any persistent storage
 - API keys should only exist in memory during the session
