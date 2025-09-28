@@ -69,6 +69,14 @@ export class LLMProviderManager {
     this.providers.set('openai', openaiProvider);
   }
 
+  async fetchModelsForProvider(providerName: string): Promise<string[]> {
+    const provider = this.providers.get(providerName);
+    if (provider && provider.dynamicModels && provider.fetchModels) {
+      return await provider.fetchModels();
+    }
+    return provider?.models || [];
+  }
+
   async getAvailableProviders(): Promise<Array<{ name: string; available: boolean; type: 'local' | 'external' }>> {
     const providers = Array.from(this.providers.entries());
     const availability = await Promise.all(
@@ -118,6 +126,11 @@ export class LLMProviderManager {
     }
     if (newConfig.url && this.providers.has('llama')) {
       this.providers.set('llama', new LlamaProvider(newConfig.url));
+    }
+    
+    // Update current provider if it exists and we have new config
+    if (newConfig.provider && this.providers.has(newConfig.provider)) {
+      this.currentProvider = newConfig.provider;
     }
   }
 

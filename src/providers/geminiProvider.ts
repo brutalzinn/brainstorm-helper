@@ -40,8 +40,8 @@ export class GeminiProvider implements LLMProvider {
   type = 'external' as const;
   baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
   apiKey?: string;
-  models = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro'];
-  defaultModel = 'gemini-1.5-flash';
+  models = ['gemini-pro', 'gemini-pro-vision'];
+  defaultModel = 'gemini-pro';
   dynamicModels = true;
 
   constructor(apiKey?: string) {
@@ -56,18 +56,25 @@ export class GeminiProvider implements LLMProvider {
     try {
       const response = await fetch(`${this.baseUrl}/models?key=${this.apiKey}`);
       if (!response.ok) {
+        console.warn('Failed to fetch Gemini models, using defaults');
         return this.models;
       }
       const data = await response.json();
       
+      console.log('Fetched Gemini models:', data);
+      
       const geminiModels = data.models
-        ?.filter((model: { name?: string }) => model.name?.includes('gemini'))
+        ?.filter((model: { name?: string; supportedGenerationMethods?: string[] }) => 
+          model.name?.includes('gemini') && 
+          model.supportedGenerationMethods?.includes('generateContent')
+        )
         ?.map((model: { name?: string }) => model.name?.replace('models/', ''))
         ?.filter((name: string) => name) || [];
       
       if (geminiModels.length > 0) {
         this.models = geminiModels;
         this.defaultModel = geminiModels[0];
+        console.log('Updated Gemini models:', this.models);
       }
       
       return this.models;

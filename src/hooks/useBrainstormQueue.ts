@@ -361,24 +361,30 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
   }, [queue, processQueue, autoProcess]);
 
   // Switch provider
-  const switchProvider = useCallback((providerName: string) => {
+  const switchProvider = useCallback(async (providerName: string) => {
     if (llmManager.setProvider(providerName)) {
       setCurrentProvider(providerName);
+      
+      // Fetch models for dynamic providers
+      try {
+        const models = await llmManager.fetchModelsForProvider(providerName);
+        console.log(`Fetched models for ${providerName}:`, models);
+      } catch (error) {
+        console.warn(`Failed to fetch models for ${providerName}:`, error);
+      }
       
       // Update model to the new provider's default model
       const provider = llmManager.getCurrentProvider();
       if (provider) {
-        setLLMConfig(prev => ({
-          ...prev,
-          provider: providerName,
-          model: provider.defaultModel
-        }));
+        console.log(`Switching to ${providerName} with model: ${provider.defaultModel}`);
         
         // Update the LLM manager config with the new provider and model
         llmManager.updateConfig({
           provider: providerName,
           model: provider.defaultModel
         });
+        
+        console.log('Updated config:', llmManager.getConfig());
       }
     }
   }, [llmManager]);
