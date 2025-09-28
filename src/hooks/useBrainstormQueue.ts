@@ -104,7 +104,7 @@ export const useBrainstormQueue = () => {
     pendingMessages: 0,
     ideasGenerated: 0,
   });
-  const [context, setContext] = useState<BrainstormContext>({
+  const [context] = useState<BrainstormContext>({
     conversationHistory: [],
     currentTopic: '',
     generatedIdeas: [],
@@ -347,7 +347,7 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
         // Reorder unprocessed messages to match queue order
         const reorderedUnprocessed = newQueue.map(queueItem => 
           unprocessedMessages.find(msg => msg.id === queueItem.message.id)
-        ).filter(Boolean);
+        ).filter((msg): msg is Message => msg !== undefined);
         
         return [...reorderedUnprocessed, ...processedMessages];
       }
@@ -433,58 +433,3 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
   };
 };
 
-// Process message with current LLM provider
-async function processWithLLM(message: Message, context: BrainstormContext, llmManager: LLMProviderManager) {
-  const conversationContext = context.conversationHistory
-    .slice(-10) // Keep last 10 messages for context
-    .map(m => `${m.type}: ${m.content}`)
-    .join('\n');
-
-  const prompt = `You are a brainstorming assistant. The user is sharing ideas for brainstorming. 
-
-Previous conversation context:
-${conversationContext}
-
-New user message: ${message.content}
-
-Please:
-1. Respond naturally to continue the brainstorming conversation
-2. Extract the main topic if this is a new direction
-3. Generate 2-3 related ideas to expand on their input
-4. Keep responses concise but helpful
-
-Respond in JSON format:
-{
-  "response": "your conversational response",
-  "topic": "extracted topic or null",
-  "ideas": ["idea1", "idea2", "idea3"]
-}`;
-
-  try {
-    const response = await llmManager.generate({
-      messages: [
-        { role: 'system', content: 'You are a helpful brainstorming assistant that responds in JSON format.' },
-        { role: 'user', content: prompt }
-      ]
-    });
-
-    const parsed = JSON.parse(response.content);
-    
-    const assistantMessage: Message = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      content: parsed.response,
-      timestamp: new Date(),
-      type: 'assistant',
-      processed: true,
-    };
-
-    return {
-      assistantMessage,
-      extractedTopic: parsed.topic,
-      generatedIdeas: parsed.ideas || [],
-    };
-  } catch (error) {
-    console.error('Error calling LLM API:', error);
-    throw error;
-  }
-}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Button, Row, Col, Alert, InputGroup, Badge } from 'react-bootstrap';
-import { useTranslation } from 'react-i18next';
-import { Settings, Key, Link, Cpu, Thermometer, Hash, Save, TestTube, RefreshCw } from 'lucide-react';
+import { Modal, Form, Button, Row, Col, Alert, Badge } from 'react-bootstrap';
+import { Settings, Key, Link, Cpu, Thermometer, Hash, Save, TestTube } from 'lucide-react';
 import { LLMProvider, LLMConfig, DEFAULT_PROVIDERS } from '../types/llmConfig';
 import { OllamaService } from '../services/ollamaService';
 
@@ -20,45 +19,15 @@ export const LLMConfigModal: React.FC<LLMConfigModalProps> = ({
   onSave,
   onTest
 }) => {
-  const { t } = useTranslation();
   const [config, setConfig] = useState<LLMConfig>(currentConfig);
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
 
   useEffect(() => {
     const provider = DEFAULT_PROVIDERS.find(p => p.id === config.provider);
     setSelectedProvider(provider || null);
-    
-    // Fetch models if provider supports dynamic models
-    if (provider?.dynamicModels) {
-      fetchModels(provider);
-    } else {
-      setAvailableModels(provider?.supportedModels || []);
-    }
   }, [config.provider]);
-
-  const fetchModels = async (provider: LLMProvider) => {
-    if (!provider.dynamicModels) return;
-    
-    setIsLoadingModels(true);
-    try {
-      const ollamaService = new OllamaService(config.url || provider.defaultUrl);
-      const models = await ollamaService.getAvailableModels();
-      setAvailableModels(models);
-      
-      // Update the provider with the fetched models
-      const updatedProvider = { ...provider, supportedModels: models };
-      setSelectedProvider(updatedProvider);
-    } catch (error) {
-      console.error('Error fetching models:', error);
-      setAvailableModels(provider.supportedModels);
-    } finally {
-      setIsLoadingModels(false);
-    }
-  };
 
   const handleProviderChange = (providerId: string) => {
     const provider = DEFAULT_PROVIDERS.find(p => p.id === providerId);

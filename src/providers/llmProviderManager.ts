@@ -115,7 +115,7 @@ export class LLMProviderManager {
       }
     }
     if (newConfig.url && this.providers.has('llama')) {
-      this.providers.set('llama', new LlamaProvider(newConfig.url));
+      this.providers.set('llama', new LlamaProvider());
     }
   }
 
@@ -131,7 +131,7 @@ export class LLMProviderManager {
     return await provider.isAvailable();
   }
 
-  async generate(request: { messages: Array<{ role: string; content: string }>; model?: string; temperature?: number; maxTokens?: number }): Promise<{ content: string; model?: string; finishReason?: string }> {
+  async generate(request: { messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>; model?: string; temperature?: number; maxTokens?: number }): Promise<{ content: string; model?: string; finishReason?: string }> {
     const provider = this.getCurrentProvider();
     if (!provider) {
       throw new Error(`Provider '${this.currentProvider}' not found`);
@@ -152,7 +152,7 @@ export class LLMProviderManager {
     };
   }
 
-  async generateStream(request: { messages: Array<{ role: string; content: string }>; model?: string; temperature?: number; maxTokens?: number }): Promise<AsyncGenerator<{ content: string; model?: string; finishReason?: string }, void, unknown>> {
+  async generateStream(request: { messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>; model?: string; temperature?: number; maxTokens?: number }): Promise<AsyncGenerator<{ content: string; model?: string; finishReason?: string }, void, unknown>> {
     const provider = this.getCurrentProvider();
     if (!provider) {
       throw new Error(`Provider '${this.currentProvider}' not found`);

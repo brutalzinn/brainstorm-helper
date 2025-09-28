@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Collapse, Modal, ButtonGroup, ListGroup, ListGroupItem, Alert, Dropdown } from 'react-bootstrap';
-import { Send, Brain, MessageSquare, Clock, CheckCircle, Lightbulb, Settings, Key, Menu, X, Copy, Check, MoreVertical, Sparkles, Search, Activity, ChevronDown, ChevronRight, Circle, Trash2, ArrowUp, ArrowDown, TestTube, Github } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Collapse, Modal, ButtonGroup, ListGroup, ListGroupItem, Alert } from 'react-bootstrap';
+import { Send, Brain, MessageSquare, CheckCircle, Lightbulb, Settings, X, Copy, Check, Sparkles, ChevronDown, ChevronRight, Circle, ArrowUp, TestTube, Github } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LLMConfig } from '../types/llmConfig';
 
@@ -43,8 +43,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isProcessing,
   currentProvider,
   availableProviders,
-  context,
-  markdownSummary,
   onSendMessage,
   onGenerateBrainstorm,
   onSwitchProvider,
@@ -60,7 +58,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showQueue, setShowQueue] = useState(true);
-  const [selectedQueueItem, setSelectedQueueItem] = useState<string | null>(null);
   const [llmConfig, setLLMConfig] = useState<LLMConfig>({
     provider: 'llama',
     model: 'llama3.1',
@@ -526,7 +523,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </Alert>
             </div>
           ) : (
-            messages.map((message, index) => {
+            messages.map((message) => {
               const isUser = message.type === 'user';
               const isAssistant = message.type === 'assistant';
               const isSystem = message.type === 'system';
