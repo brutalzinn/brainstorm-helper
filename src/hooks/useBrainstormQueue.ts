@@ -364,6 +364,22 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
   const switchProvider = useCallback((providerName: string) => {
     if (llmManager.setProvider(providerName)) {
       setCurrentProvider(providerName);
+      
+      // Update model to the new provider's default model
+      const provider = llmManager.getCurrentProvider();
+      if (provider) {
+        setLLMConfig(prev => ({
+          ...prev,
+          provider: providerName,
+          model: provider.defaultModel
+        }));
+        
+        // Update the LLM manager config with the new provider and model
+        llmManager.updateConfig({
+          provider: providerName,
+          model: provider.defaultModel
+        });
+      }
     }
   }, [llmManager]);
 
