@@ -646,6 +646,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </Card.Body>
       </Card>
 
+      {/* Footer */}
+      <Card className="bg-dark border-secondary rounded-0">
+        <Card.Body className="py-2">
+          <div className="d-flex justify-content-center align-items-center">
+            <a
+              href="https://github.com/brutalzinn/brainstorm-helper"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-decoration-none d-flex align-items-center text-muted"
+            >
+              <Github size={16} className="me-2" />
+              <span>View on GitHub</span>
+            </a>
+          </div>
+        </Card.Body>
+      </Card>
+
       {/* Brainstorm Result Modal */}
       <Modal show={!!brainstormResult} onHide={() => setBrainstormResult('')} size="lg" data-bs-theme="dark">
         <Modal.Header closeButton className="bg-dark border-secondary">
