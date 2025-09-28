@@ -1,0 +1,848 @@
+/* Bootstrap CSS */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Force dark theme - More aggressive overrides */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html[data-bs-theme="dark"], 
+html[data-bs-theme="dark"] body,
+html[data-bs-theme="dark"] #root {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+body {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+#root {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  min-height: 100vh !important;
+}
+
+/* Autism-Friendly Color Scheme */
+:root {
+  /* Primary Colors - Calming blues and greens */
+  --autism-primary: #2E86AB;      /* Soft blue */
+  --autism-secondary: #A23B72;    /* Muted purple */
+  --autism-accent: #F18F01;       /* Warm orange */
+  --autism-success: #C73E1D;      /* Clear red for success/important */
+  
+  /* Background Colors - High contrast, calming */
+  --autism-bg-primary: #F8F9FA;   /* Very light gray */
+  --autism-bg-secondary: #E9ECEF; /* Light gray */
+  --autism-bg-tertiary: #DEE2E6;  /* Medium gray */
+  
+  /* Text Colors - High contrast for readability */
+  --autism-text-primary: #212529; /* Dark gray */
+  --autism-text-secondary: #495057; /* Medium gray */
+  --autism-text-muted: #6C757D;   /* Light gray */
+  
+  /* Message Colors - Clear, distinct */
+  --autism-user-bg: #E3F2FD;      /* Very light blue */
+  --autism-user-text: #1565C0;    /* Dark blue */
+  --autism-assistant-bg: #F3E5F5; /* Very light purple */
+  --autism-assistant-text: #7B1FA2; /* Dark purple */
+  --autism-system-bg: #FFF3E0;    /* Very light orange */
+  --autism-system-text: #E65100;  /* Dark orange */
+  
+  /* Status Colors - Clear and distinct */
+  --autism-online: #2E7D32;       /* Forest green */
+  --autism-processing: #F57C00;   /* Orange */
+  --autism-error: #D32F2F;        /* Clear red */
+  --autism-warning: #F9A825;      /* Amber */
+}
+
+/* Dark theme for users who prefer it */
+[data-bs-theme="dark"] {
+  --autism-bg-primary: #1A1A1A;   /* Very dark gray */
+  --autism-bg-secondary: #2D2D2D; /* Dark gray */
+  --autism-bg-tertiary: #404040;  /* Medium dark gray */
+  
+  --autism-text-primary: #FFFFFF; /* White */
+  --autism-text-secondary: #E0E0E0; /* Light gray */
+  --autism-text-muted: #B0B0B0;   /* Medium light gray */
+  
+  --autism-user-bg: #1E3A8A;      /* Dark blue */
+  --autism-user-text: #DBEAFE;    /* Light blue */
+  --autism-assistant-bg: #581C87; /* Dark purple */
+  --autism-assistant-text: #E9D5FF; /* Light purple */
+  --autism-system-bg: #92400E;    /* Dark orange */
+  --autism-system-text: #FED7AA;  /* Light orange */
+}
+
+body {
+  background-color: var(--autism-bg-primary) !important;
+  color: var(--autism-text-primary) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+}
+
+/* Autism-Friendly Component Styling */
+
+/* Input styling - High contrast, clear borders */
+input[type="text"], .form-control {
+  color: var(--autism-text-primary) !important;
+  background-color: var(--autism-bg-primary) !important;
+  border: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 8px !important;
+  font-size: 16px !important; /* Prevents zoom on mobile */
+  padding: 12px 16px !important;
+}
+
+input[type="text"]:focus, .form-control:focus {
+  color: var(--autism-text-primary) !important;
+  background-color: var(--autism-bg-primary) !important;
+  border-color: var(--autism-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(46, 134, 171, 0.25) !important;
+  outline: none !important;
+}
+
+input[type="text"]::placeholder, .form-control::placeholder {
+  color: var(--autism-text-muted) !important;
+}
+
+/* Card styling - Clear, distinct sections */
+.card {
+  background-color: var(--autism-bg-primary) !important;
+  border: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-header {
+  background-color: var(--autism-bg-secondary) !important;
+  border-bottom: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 10px 10px 0 0 !important;
+  font-weight: 600 !important;
+}
+
+.card-body {
+  background-color: var(--autism-bg-primary) !important;
+  padding: 20px !important;
+}
+
+.card-footer {
+  background-color: var(--autism-bg-secondary) !important;
+  border-top: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 0 0 10px 10px !important;
+}
+
+/* List group styling - Clear item separation */
+.list-group-item {
+  background-color: var(--autism-bg-primary) !important;
+  border: 1px solid var(--autism-bg-tertiary) !important;
+  color: var(--autism-text-primary) !important;
+  padding: 16px 20px !important;
+  margin-bottom: 4px !important;
+  border-radius: 8px !important;
+}
+
+.list-group-item:hover {
+  background-color: var(--autism-bg-secondary) !important;
+}
+
+/* Modal styling - Clear, focused interface */
+.modal-content {
+  background-color: var(--autism-bg-primary) !important;
+  border: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 12px !important;
+}
+
+.modal-header {
+  background-color: var(--autism-bg-secondary) !important;
+  border-bottom: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+.modal-footer {
+  background-color: var(--autism-bg-secondary) !important;
+  border-top: 2px solid var(--autism-bg-tertiary) !important;
+  border-radius: 0 0 10px 10px !important;
+}
+
+/* Button styling - Clear, distinct actions */
+.btn {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  border: 2px solid transparent !important;
+  padding: 12px 20px !important;
+  font-size: 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-primary {
+  background-color: var(--autism-primary) !important;
+  border-color: var(--autism-primary) !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background-color: #1e5f7a !important;
+  border-color: #1e5f7a !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-success {
+  background-color: var(--autism-success) !important;
+  border-color: var(--autism-success) !important;
+  color: white !important;
+}
+
+.btn-outline-secondary {
+  color: var(--autism-text-secondary) !important;
+  border-color: var(--autism-bg-tertiary) !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-secondary:hover {
+  color: var(--autism-text-primary) !important;
+  background-color: var(--autism-bg-secondary) !important;
+  border-color: var(--autism-bg-tertiary) !important;
+}
+
+.btn-outline-danger {
+  color: var(--autism-error) !important;
+  border-color: var(--autism-error) !important;
+  background-color: transparent !important;
+}
+
+.btn-outline-danger:hover {
+  color: white !important;
+  background-color: var(--autism-error) !important;
+  border-color: var(--autism-error) !important;
+}
+
+/* Ensure proper touch targets for mobile */
+button, .btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Force dark theme on all Bootstrap components */
+[data-bs-theme="dark"] {
+  --bs-body-bg: #1a1a1a;
+  --bs-body-color: #ffffff;
+  --bs-emphasis-color: #ffffff;
+  --bs-secondary-color: #6c757d;
+  --bs-tertiary-color: #6c757d;
+  --bs-primary: #0d6efd;
+  --bs-secondary: #6c757d;
+  --bs-success: #198754;
+  --bs-info: #0dcaf0;
+  --bs-warning: #ffc107;
+  --bs-danger: #dc3545;
+  --bs-light: #f8f9fa;
+  --bs-dark: #212529;
+}
+
+/* Override Bootstrap's default background */
+.bg-dark {
+  background-color: #1a1a1a !important;
+}
+
+.text-white {
+  color: #ffffff !important;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .btn {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  
+  .form-control {
+    min-height: 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Custom CSS variables for chat app theme */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --border-color: #e5e7eb;
+  --chat-bg: #f0f2f5;
+  --message-user-bg: #dcf8c6;
+  --message-assistant-bg: #ffffff;
+}
+
+.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-green: #10b981;
+  --accent-yellow: #f59e0b;
+  --border-color: #374151;
+  --chat-bg: #0b141a;
+  --message-user-bg: #005c4b;
+  --message-assistant-bg: #202c33;
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Custom animations */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Focus styles */
+.focus-ring {
+  outline: none;
+  ring: 2px;
+  ring-color: var(--accent-blue);
+  ring-opacity: 0.5;
+}
+
+/* Button styles */
+.btn {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Message styles */
+.message-bubble {
+  max-width: 20rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  word-wrap: break-word;
+  animation: slideIn 0.3s ease-out;
+}
+
+.message-user {
+  background-color: var(--accent-blue);
+  color: white;
+  margin-left: auto;
+}
+
+.message-assistant {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  margin-right: auto;
+}
+
+.message-system {
+  background-color: var(--accent-yellow);
+  color: #1f2937;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Stats styles */
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.stat-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Loading states */
+.loading-dots::after {
+  content: '';
+  animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+  0%, 20% {
+    content: '';
+  }
+  40% {
+    content: '.';
+  }
+  60% {
+    content: '..';
+  }
+  80%, 100% {
+    content: '...';
+  }
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border-radius: 0.5rem;
+  max-width: 64rem;
+  width: 100%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Responsive design - Mobile first */
+/* Base styles for all devices */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mobile-first responsive breakpoints */
+/* Small mobile (320px and up) */
+@media (min-width: 320px) {
+  .message-bubble {
+    max-width: 90%;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  .p-3 {
+    padding: 0.75rem;
+  }
+  
+  .p-4 {
+    padding: 1rem;
+  }
+}
+
+/* Mobile (640px and up) */
+@media (min-width: 640px) {
+  .message-bubble {
+    max-width: 80%;
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Tablet (768px and up) */
+@media (min-width: 768px) {
+  .message-bubble {
+    max-width: 70%;
+  }
+  
+  .text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 1024px) {
+  .message-bubble {
+    max-width: 60%;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+}
+
+/* Large desktop (1280px and up) */
+@media (min-width: 1280px) {
+  .message-bubble {
+    max-width: 50%;
+  }
+}
+
+/* Touch targets for mobile */
+button, input, textarea {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Mobile-specific touch targets */
+@media (max-width: 640px) {
+  button {
+    min-height: 48px;
+    padding: 12px 16px;
+  }
+  
+  input, textarea {
+    min-height: 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Smooth scrolling */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbars but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive grid */
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Responsive spacing */
+@media (max-width: 640px) {
+  .space-y-4 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+}
+
+/* Responsive text alignment */
+@media (max-width: 640px) {
+  .text-center {
+    text-align: center;
+  }
+}
+
+/* Responsive flexbox */
+@media (max-width: 640px) {
+  .flex-col {
+    flex-direction: column;
+  }
+  
+  .flex-row {
+    flex-direction: row;
+  }
+}
+
+/* Responsive gaps */
+@media (max-width: 640px) {
+  .gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .gap-3 {
+    gap: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 641px) {
+  .gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .gap-3 {
+    gap: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 1rem;
+  }
+  
+  .gap-6 {
+    gap: 1.5rem;
+  }
+}
+
+/* Enhanced scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+/* Smooth animations */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Loading animation improvements */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Chat message animations */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-enter {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Typing indicator animation */
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+.typing-dot {
+  animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+/* WhatsApp-style message bubbles */
+.message-bubble-user {
+  background: var(--message-user-bg);
+  color: #000;
+  border-radius: 18px 18px 4px 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.message-bubble-assistant {
+  background: var(--message-assistant-bg);
+  color: var(--text-primary);
+  border-radius: 18px 18px 18px 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+}
+
+.dark .message-bubble-user {
+  background: var(--message-user-bg);
+  color: #fff;
+}
+
+.dark .message-bubble-assistant {
+  background: var(--message-assistant-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Input styling for mobile - ensure white text */
+input[type="text"] {
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+input[type="text"]::placeholder {
+  color: #9ca3af !important;
+  -webkit-text-fill-color: #9ca3af !important;
+}
+
+/* Send button specific styling */
+.send-button {
+  min-width: 60px;
+  min-height: 44px;
+  padding: 12px 16px;
+}

@@ -1,0 +1,215 @@
+# Brainstorm Helper - React Development Rules
+
+## Project Overview
+This is a React TypeScript SPA for brainstorming with AI integration using Llama 3.1 locally. The app features a chat interface with FIFO queue processing, dark mode, and real-time stats.
+
+## React Best Practices & Patterns
+
+### Component Architecture
+- Use functional components with hooks exclusively
+- Prefer composition over inheritance
+- Keep components small and focused (single responsibility)
+- Use TypeScript interfaces for all props and state
+- Extract custom hooks for complex logic (like useBrainstormQueue)
+- Use React.memo() for performance optimization when needed
+
+### State Management
+- Use useState for local component state
+- Use useReducer for complex state logic
+- Use useContext for global state that needs to be shared
+- Keep state as close to where it's used as possible
+- Use custom hooks to encapsulate stateful logic
+
+### Hooks Guidelines
+- Always use hooks at the top level of components
+- Use useCallback for functions passed as props to prevent unnecessary re-renders
+- Use useMemo for expensive calculations
+- Use useEffect with proper dependency arrays
+- Create custom hooks for reusable stateful logic
+
+### TypeScript Standards
+- Define interfaces for all data structures in `/src/types/`
+- Use strict typing - avoid `any` type
+- Use generic types where appropriate
+- Define proper return types for functions
+- Use union types for component variants
+
+### File Organization
+```
+src/
+├── components/          # Reusable UI components
+├── hooks/              # Custom React hooks
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+├── services/           # API calls and external services
+└── constants/          # App constants
+```
+
+### Component Naming
+- Use PascalCase for component names
+- Use descriptive names that indicate purpose
+- Suffix with component type when needed (e.g., ChatInterface, MessageList)
+- Use kebab-case for file names
+
+### Props Interface
+- Always define props interface with descriptive name
+- Use optional props with `?` when appropriate
+- Group related props together
+- Use union types for variant props
+
+### Styling Guidelines
+- Use Tailwind CSS for styling
+- Prefer utility classes over custom CSS
+- Use CSS custom properties for theme values
+- Keep responsive design in mind
+- Use dark mode as default theme
+- Follow mobile-first approach
+
+### Performance Optimization
+- Use React.memo() for components that receive stable props
+- Use useCallback() for event handlers passed to child components
+- Use useMemo() for expensive calculations
+- Implement proper loading states
+- Use lazy loading for large components when appropriate
+
+### Error Handling
+- Use try-catch blocks for async operations
+- Implement proper error boundaries
+- Show user-friendly error messages
+- Log errors for debugging
+- Handle loading and error states in UI
+
+### API Integration
+- Use axios for HTTP requests
+- Implement proper error handling for API calls
+- Use TypeScript interfaces for API responses
+- Implement retry logic for failed requests
+- Use proper loading states during API calls
+
+### Code Quality
+- Use ESLint and Prettier for code formatting
+- Write self-documenting code with clear variable names
+- Add JSDoc comments for complex functions
+- Keep functions small and focused
+- Use meaningful commit messages
+
+### Testing Considerations
+- Write testable components
+- Separate business logic from UI components
+- Use dependency injection for external dependencies
+- Mock external API calls in tests
+
+### Accessibility
+- Use semantic HTML elements
+- Add proper ARIA labels
+- Ensure keyboard navigation works
+- Use proper color contrast
+- Add focus indicators
+
+### Security
+- Sanitize user inputs
+- Validate data before processing
+- Use HTTPS for API calls
+- Implement proper CORS handling
+
+## Project-Specific Patterns
+
+### Queue System
+- Use FIFO (First In, First Out) for message processing
+- Implement proper queue state management
+- Handle queue processing errors gracefully
+- Show queue status in UI
+
+### Chat Interface
+- Implement real-time message updates
+- Use proper message timestamps
+- Handle different message types (user, assistant, system)
+- Implement message status indicators
+
+### AI Integration
+- Use local Llama 3.1 API (http://localhost:11434)
+- Implement proper context management
+- Handle AI response parsing
+- Implement fallback for AI failures
+
+### Dark Mode
+- Use CSS custom properties for theming
+- Implement proper contrast ratios
+- Use consistent color palette
+- Support system preference detection
+
+## Code Examples
+
+### Component Structure
+```tsx
+interface ComponentProps {
+  title: string;
+  onAction: (value: string) => void;
+  isLoading?: boolean;
+}
+
+export const Component: React.FC<ComponentProps> = ({
+  title,
+  onAction,
+  isLoading = false,
+}) => {
+  const [state, setState] = useState<string>('');
+  
+  const handleSubmit = useCallback((value: string) => {
+    onAction(value);
+  }, [onAction]);
+
+  return (
+    <div className="component-container">
+      <h2>{title}</h2>
+      {/* Component content */}
+    </div>
+  );
+};
+```
+
+### Custom Hook Pattern
+```tsx
+export const useCustomHook = (initialValue: string) => {
+  const [value, setValue] = useState(initialValue);
+  
+  const updateValue = useCallback((newValue: string) => {
+    setValue(newValue);
+  }, []);
+  
+  return { value, updateValue };
+};
+```
+
+### API Service Pattern
+```tsx
+export const apiService = {
+  async fetchData<T>(url: string): Promise<T> {
+    try {
+      const response = await axios.get<T>(url);
+      return response.data;
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  },
+};
+```
+
+## Development Workflow
+1. Create feature branch from main
+2. Implement changes following these rules
+3. Test functionality thoroughly
+4. Run linting and type checking
+5. Create pull request with clear description
+6. Review and merge after approval
+
+## Common Anti-Patterns to Avoid
+- Don't use class components (use functional components)
+- Don't mutate state directly
+- Don't use useEffect without dependency array
+- Don't ignore TypeScript errors
+- Don't create overly complex components
+- Don't forget error handling
+- Don't use inline styles when Tailwind classes exist
+- Don't ignore accessibility requirements
