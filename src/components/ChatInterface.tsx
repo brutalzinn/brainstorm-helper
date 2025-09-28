@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Collapse, Modal, ButtonGroup, ListGroup, ListGroupItem, Alert } from 'react-bootstrap';
-import { Send, Brain, MessageSquare, CheckCircle, Lightbulb, Settings, X, Copy, Check, Sparkles, ChevronDown, ChevronRight, Circle, ArrowUp, TestTube, Github } from 'lucide-react';
+import { Send, Brain, MessageSquare, CheckCircle, Lightbulb, Settings, X, Copy, Check, Sparkles, ChevronDown, ChevronRight, Circle, ArrowUp, TestTube, Github, AlertCircle } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { LLMConfig } from '../types/llmConfig';
 
-// Define types directly in this file to avoid import issues
 interface Message {
   id: string;
   content: string;
@@ -21,20 +20,106 @@ interface BrainstormStats {
   lastProcessedAt?: Date;
 }
 
+interface BrainstormContext {
+  sessionId: string;
+  conversationHistory: Array<{
+    id: string;
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+    timestamp: Date;
+    metadata?: {
+      topic?: string;
+      confidence?: number;
+      processingTime?: number;
+    };
+  }>;
+  currentTopic: string;
+  extractedInsights: Array<{
+    id: string;
+    content: string;
+    category: 'technical' | 'creative' | 'strategic' | 'practical';
+    confidence: number;
+    sourceMessageId: string;
+    extractedAt: Date;
+  }>;
+  generatedIdeas: Array<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    priority: 'high' | 'medium' | 'low';
+    relatedInsights: string[];
+    generatedAt: Date;
+  }>;
+  summaryPoints: Array<{
+    id: string;
+    title: string;
+    content: string;
+    type: 'insight' | 'idea' | 'action' | 'question';
+    priority: number;
+    relatedMessages: string[];
+  }>;
+  lastProcessedAt: Date;
+  processingStrategy: 'accumulate' | 'summarize' | 'generate';
+}
+
+interface MarkdownSummary {
+  title: string;
+  overview: string;
+  keyInsights: Array<{
+    id: string;
+    title: string;
+    content: string;
+    type: 'insight' | 'idea' | 'action' | 'question';
+    priority: number;
+    relatedMessages: string[];
+  }>;
+  generatedIdeas: Array<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    priority: 'high' | 'medium' | 'low';
+    relatedInsights: string[];
+    generatedAt: Date;
+  }>;
+  actionItems: Array<{
+    id: string;
+    title: string;
+    content: string;
+    type: 'insight' | 'idea' | 'action' | 'question';
+    priority: number;
+    relatedMessages: string[];
+  }>;
+  questions: Array<{
+    id: string;
+    title: string;
+    content: string;
+    type: 'insight' | 'idea' | 'action' | 'question';
+    priority: number;
+    relatedMessages: string[];
+  }>;
+  nextSteps: string[];
+  createdAt: Date;
+}
+
 interface ChatInterfaceProps {
   messages: Message[];
   stats: BrainstormStats;
   isProcessing: boolean;
   currentProvider: string;
   availableProviders: Array<{ name: string; available: boolean; type: 'local' | 'external' }>;
-  context: any;
-  markdownSummary: any;
+  context: BrainstormContext;
+  markdownSummary: MarkdownSummary | null;
   onSendMessage: (content: string) => void;
   onGenerateBrainstorm: () => Promise<string>;
   onSwitchProvider: (provider: string) => void;
   onUpdateApiKey: (apiKey: string) => void;
   removeMessage: (messageId: string) => void;
   moveMessageUp: (messageId: string) => void;
+  autoProcess: boolean;
+  onToggleAutoProcess: () => void;
+  onProcessQueue: () => void;
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -49,6 +134,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   onUpdateApiKey,
   removeMessage,
   moveMessageUp,
+  autoProcess,
+  onToggleAutoProcess,
+  onProcessQueue,
 }) => {
   const [input, setInput] = useState('');
   const [brainstormResult, setBrainstormResult] = useState('');
@@ -56,8 +144,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [hasConfiguredLLM, setHasConfiguredLLM] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [showQueue, setShowQueue] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [llmConfig, setLLMConfig] = useState<LLMConfig>({
     provider: 'llama',
     model: 'llama3.1',
@@ -90,6 +180,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Check if LLM is configured
+  useEffect(() => {
+    const hasApiKey = apiKey.trim().length > 0;
+    const isLocalProvider = currentProvider === 'llama';
+    setHasConfiguredLLM(isLocalProvider || hasApiKey);
+  }, [apiKey, currentProvider]);
+
+  // Mobile detection and queue behavior
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      setShowQueue(false); // Collapse queue by default on mobile
+    }
+  }, []);
+
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
@@ -116,14 +221,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleApiKeySubmit = useCallback(() => {
     if (apiKey.trim()) {
       onUpdateApiKey(apiKey.trim());
-      setApiKey('');
       setShowSettings(false);
     }
   }, [apiKey, onUpdateApiKey]);
 
-  const formatTime = useCallback((date: Date) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const formatTime = useCallback((timestamp: Date) => {
+    return timestamp.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
   }, []);
+
+  const getProviderDisplayName = useCallback(() => {
+    const provider = availableProviders.find(p => p.name === currentProvider);
+    if (!provider) return 'AI Assistant';
+    
+    switch (currentProvider) {
+      case 'llama':
+        return 'Local Llama';
+      case 'gemini':
+        return 'Google Gemini';
+      case 'openai':
+        return 'OpenAI GPT';
+      default:
+        return provider.name;
+    }
+  }, [currentProvider, availableProviders]);
 
   const handleCopyBrainstorm = useCallback(async () => {
     try {
@@ -168,12 +293,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, []);
 
 
-  // Get unprocessed messages for queue
   const unprocessedMessages = messages.filter(msg => msg.type === 'user' && !msg.processed);
 
   return (
     <Container fluid className="d-flex flex-column h-100 bg-dark text-white p-0" data-bs-theme="dark">
-      {/* Header */}
       <Card className="bg-dark border-secondary rounded-0">
         <Card.Body className="py-3">
           <Row className="align-items-center">
@@ -186,7 +309,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <h5 className="mb-0 text-white">Brainstorm Helper</h5>
                   <small className="text-success d-flex align-items-center">
                     <div className="bg-success rounded-circle me-1" style={{width: '8px', height: '8px'}}></div>
-                    {isProcessing ? 'Processing...' : 'Online'} • {currentProvider} (Local)
+                    {isProcessing ? 'Processing...' : 'Online'} • {getProviderDisplayName()}
                   </small>
                 </div>
               </div>
@@ -224,10 +347,44 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </span>
               </div>
             </Col>
-            <Col xs="auto">
-              <Badge bg={isProcessing ? "warning" : "success"} className="text-dark">
-                {isProcessing ? 'Processing...' : 'Auto-processing'}
-              </Badge>
+            <Col className="d-flex gap-2">
+              {!autoProcess && unprocessedMessages.length > 0 && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onProcessQueue();
+                  }}
+                  className="d-flex align-items-center justify-content-center flex-grow-1"
+                  style={{minHeight: '32px'}}
+                  title="Process queue now"
+                >
+                  Process Queue
+                </Button>
+              )}
+            </Col>
+            <Col xs="auto" className="d-flex gap-2">
+        <Button
+          variant={autoProcess ? "success" : "outline-secondary"}
+          size="sm"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleAutoProcess();
+          }}
+          className="d-flex align-items-center justify-content-center"
+          style={{minWidth: '80px', minHeight: '32px'}}
+          title={autoProcess ? "Switch to Manual Mode" : "Switch to Auto Mode"}
+        >
+          {autoProcess ? "Auto Mode" : "Manual Mode"}
+        </Button>
+        {isProcessing && (
+          <Badge bg="warning" className="text-dark">
+            Processing...
+          </Badge>
+        )}
             </Col>
           </Row>
         </Card.Header>
@@ -252,7 +409,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                           <small className="text-success">Processing...</small>
                         </div>
                       )}
-                    </div>
+              </div>
                     <ButtonGroup size="sm">
                       <Button
                         variant="outline-secondary"
@@ -314,7 +471,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <Lightbulb size={16} className="text-warning mb-1" />
                     <small className="text-white fw-bold">{stats.ideasGenerated}</small>
                     <small className="text-muted">Ideas</small>
-                  </div>
+            </div>
                 </Col>
               </Row>
             </Card.Footer>
@@ -322,7 +479,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </Collapse>
       </Card>
 
-      {/* Settings Panel */}
+        {/* Settings Panel */}
       <Collapse in={showSettings}>
         <Card className="bg-secondary border-secondary rounded-0">
           <Card.Body>
@@ -331,8 +488,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {/* LLM Configuration */}
             <div className="mb-3">
               <h6 className="text-white mb-3">AI Provider Configuration</h6>
-              
-              {/* Provider Selection */}
+            
+            {/* Provider Selection */}
               <div className="mb-3">
                 <Form.Label className="text-white">Provider</Form.Label>
                 <Form.Select
@@ -340,9 +497,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   onChange={(e) => onSwitchProvider(e.target.value)}
                   className="bg-dark text-white border-secondary"
                 >
-                  {availableProviders.map((provider) => (
+                {availableProviders.map((provider) => (
                     <option key={provider.name} value={provider.name} disabled={!provider.available}>
-                      {provider.available ? '✅' : '❌'} {provider.name}
+                      {provider.available ? '✅' : '❌'} {provider.name} ({provider.type === 'local' ? 'Local' : 'External'})
                     </option>
                   ))}
                 </Form.Select>
@@ -362,29 +519,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <Form.Text className="text-muted">
                     URL where your local Ollama instance is running
                   </Form.Text>
-                </div>
+            </div>
               )}
 
               {/* API Key for External Providers */}
-              {currentProvider !== 'llama' && (
+            {currentProvider !== 'llama' && (
                 <div className="mb-3">
-                  <Form.Label className="text-white">API Key for {currentProvider}</Form.Label>
+                  <Form.Label className="text-white">API Key for {currentProvider} (Session Only)</Form.Label>
                   <InputGroup>
                     <Form.Control
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Enter API key..."
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="Enter API key (not stored)..."
                       className="bg-dark text-white border-secondary"
-                    />
+                  />
                     <Button
                       variant="success"
-                      onClick={handleApiKeySubmit}
-                      disabled={!apiKey.trim()}
+                    onClick={handleApiKeySubmit}
+                    disabled={!apiKey.trim()}
                     >
-                      Save
+                      Use
                     </Button>
                   </InputGroup>
+                  <Form.Text className="text-warning">
+                    <strong>Security:</strong> API keys are never stored and only used for the current session.
+                  </Form.Text>
                 </div>
               )}
 
@@ -400,8 +560,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <option value="llama3.1">llama3.1 (Default)</option>
                   ) : currentProvider === 'gemini' ? (
                     <>
-                      <option value="gemini-pro">gemini-pro</option>
-                      <option value="gemini-pro-vision">gemini-pro-vision</option>
+                      <option value="gemini-1.5-flash">gemini-1.5-flash (Fast)</option>
+                      <option value="gemini-1.5-pro">gemini-1.5-pro (Advanced)</option>
+                      <option value="gemini-pro">gemini-pro (Legacy)</option>
                     </>
                   ) : currentProvider === 'openai' ? (
                     <>
@@ -494,8 +655,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <TestTube size={16} className="me-1" />
                   Test Connection
                 </Button>
-              </div>
-            </div>
+          </div>
+      </div>
           </Card.Body>
         </Card>
       </Collapse>
@@ -503,27 +664,74 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Messages Area */}
       <div 
         ref={messagesContainerRef}
-        className="flex-grow-1 overflow-auto bg-dark"
+        className="flex-grow-1 overflow-y-auto bg-dark"
         style={{ 
           paddingBottom: isKeyboardOpen ? '80px' : '0px',
-          transition: 'padding-bottom 0.3s ease'
+          transition: 'padding-bottom 0.3s ease',
+          maxHeight: 'calc(100vh - 200px)',
+          scrollBehavior: 'smooth'
         }}
       >
-        <Container className="py-3">
-          {messages.length === 0 ? (
+        <Container className="py-3" style={{minHeight: '100%'}}>
+        {messages.length === 0 ? (
             <div className="text-center py-5">
               <div className="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style={{width: '80px', height: '80px'}}>
                 <Brain size={40} className="text-white" />
               </div>
               <h4 className="text-white mb-3">Start Brainstorming!</h4>
               <p className="text-muted mb-4">Share your ideas and I'll help you brainstorm creative solutions.</p>
-              <Alert variant="info" className="d-inline-flex align-items-center">
-                <Sparkles size={16} className="me-2" />
-                AI-powered brainstorming with local Llama
-              </Alert>
-            </div>
-          ) : (
-            messages.map((message) => {
+              
+              {/* Configuration Button - Always Show */}
+              <div className="d-flex justify-content-center mb-3">
+                <Button
+                  variant={hasConfiguredLLM ? "outline-info" : "warning"}
+                  size="lg"
+                  onClick={() => setShowSettings(true)}
+                  className="d-flex align-items-center px-4 py-3"
+                  style={{minHeight: '60px', minWidth: '300px'}}
+                >
+                  <Settings size={20} className="me-3" />
+                  <div className="text-start">
+                    <div className="fw-bold">
+                      {hasConfiguredLLM ? 'Configure LLM Provider' : 'Configure LLM Provider'}
+                    </div>
+                    <small className="opacity-75">
+                      {hasConfiguredLLM 
+                        ? `Currently using ${getProviderDisplayName()} - Click to change` 
+                        : 'Click to set up your AI provider'
+                      }
+                    </small>
+                  </div>
+                </Button>
+              </div>
+
+              {/* Current Provider Info - Always Show When Provider Selected */}
+              <div className="d-flex justify-content-center">
+                <Alert variant="info" className="d-inline-flex align-items-center">
+                  <Sparkles size={16} className="me-2" />
+                  AI-powered brainstorming with {getProviderDisplayName()}
+                </Alert>
+              </div>
+          </div>
+        ) : (
+            <>
+              {errorMessage && (
+                <div className="d-flex justify-content-center mb-3">
+                  <Alert variant="danger" className="text-center" style={{maxWidth: '80%'}}>
+                    <AlertCircle size={16} className="me-2" />
+                    <strong>Connection Error:</strong> {errorMessage}
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm" 
+                      className="ms-2"
+                      onClick={() => setErrorMessage(null)}
+                    >
+                      Dismiss
+                    </Button>
+                  </Alert>
+                </div>
+              )}
+              {messages.map((message) => {
               const isUser = message.type === 'user';
               const isAssistant = message.type === 'assistant';
               const isSystem = message.type === 'system';
@@ -534,7 +742,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   {isUser && (
                     <div className="bg-success text-white p-3 rounded-3" style={{maxWidth: '80%'}}>
                       <p className="mb-1 text-white">{message.content}</p>
-                      <small className="text-success opacity-75 d-block text-end">
+                      <small className="text-white opacity-75 d-block text-end">
                         {formatTime(message.timestamp)}
                       </small>
                     </div>
@@ -556,7 +764,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       <Alert variant="warning" className="text-center" style={{maxWidth: '80%'}}>
                         <p className="mb-1">{message.content}</p>
                         <small className="text-muted">
-                          {formatTime(message.timestamp)}
+                  {formatTime(message.timestamp)}
                         </small>
                       </Alert>
                     </div>
@@ -564,7 +772,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
               );
             })
-          )}
+            }
           
           {/* Processing Indicator */}
           {isProcessing && (
@@ -578,41 +786,43 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </div>
               </div>
             </div>
-          )}
+        )}
           
-          <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} />
+            </>
+          )}
         </Container>
       </div>
 
       {/* Input Area */}
       <Card className="bg-dark border-secondary rounded-0">
         <Card.Body>
-          {/* Generate Brainstorm Button */}
-          {messages.length > 0 && (
+        {/* Generate Brainstorm Button */}
+        {messages.length > 0 && (
             <div className="text-center mb-3">
               <Button
                 variant="primary"
-                onClick={handleGenerateBrainstorm}
+              onClick={handleGenerateBrainstorm}
                 disabled={isGenerating}
                 className="px-4 py-2"
                 style={{minHeight: '44px'}}
-              >
-                {isGenerating ? (
-                  <>
+            >
+              {isGenerating ? (
+                <>
                     <div className="spinner-border spinner-border-sm me-2" role="status">
                       <span className="visually-hidden">Generating...</span>
                     </div>
-                    Generating...
-                  </>
-                ) : (
-                  <>
+                  Generating...
+                </>
+              ) : (
+                <>
                     <Sparkles size={16} className="me-2" />
-                    Generate Brainstorm
-                  </>
-                )}
+                  Generate Brainstorm
+                </>
+              )}
               </Button>
-            </div>
-          )}
+          </div>
+        )}
 
           {/* Message Input Form */}
           <Form onSubmit={handleSubmit}>
@@ -656,7 +866,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <Github size={16} className="me-2" />
               <span>View on GitHub</span>
             </a>
-          </div>
+      </div>
         </Card.Body>
       </Card>
 
@@ -676,7 +886,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-dark text-white">
-          <MarkdownRenderer content={brainstormResult} />
+              <MarkdownRenderer content={brainstormResult} />
         </Modal.Body>
         <Modal.Footer className="bg-dark border-secondary">
           <Button

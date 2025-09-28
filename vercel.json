@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/llama/(.*)",
+      "destination": "http://localhost:11434/api/$1"
+    }
+  ],
+  "functions": {
+    "app/api/llama/[...path].js": {
+      "maxDuration": 30
+    }
+  }
+}

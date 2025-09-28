@@ -21,12 +21,15 @@ function App() {
     availableProviders,
     context,
     markdownSummary,
+    autoProcess,
     addMessage, 
     generateBrainstorm,
     switchProvider,
     updateApiKey,
     removeMessage,
-    moveMessageUp
+    moveMessageUp,
+    toggleAutoProcess,
+    processQueue
   } = useBrainstormQueue();
 
   return (
@@ -45,6 +48,9 @@ function App() {
         onUpdateApiKey={updateApiKey}
         removeMessage={removeMessage}
         moveMessageUp={moveMessageUp}
+        autoProcess={autoProcess}
+        onToggleAutoProcess={toggleAutoProcess}
+        onProcessQueue={processQueue}
       />
     </Container>
   );

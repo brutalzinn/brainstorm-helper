@@ -32,6 +32,8 @@ interface LLMProvider {
   apiKey?: string;
   models: string[];
   defaultModel: string;
+  dynamicModels?: boolean;
+  fetchModels?: () => Promise<string[]>;
   isAvailable: () => Promise<boolean>;
   generate: (request: LLMRequest) => Promise<LLMResponse>;
   generateStream?: (request: LLMRequest) => AsyncGenerator<LLMResponse, void, unknown>;
@@ -57,15 +59,12 @@ export class LLMProviderManager {
   }
 
   private initializeProviders() {
-    // Initialize Llama provider (local)
-    const llamaProvider = new LlamaProvider();
+    const llamaProvider = new LlamaProvider(this.config.url);
     this.providers.set('llama', llamaProvider);
 
-    // Initialize Gemini provider (external)
     const geminiProvider = new GeminiProvider(this.config.apiKey);
     this.providers.set('gemini', geminiProvider);
 
-    // Initialize OpenAI provider (external)
     const openaiProvider = new OpenAIProvider(this.config.apiKey);
     this.providers.set('openai', openaiProvider);
   }
@@ -73,11 +72,15 @@ export class LLMProviderManager {
   async getAvailableProviders(): Promise<Array<{ name: string; available: boolean; type: 'local' | 'external' }>> {
     const providers = Array.from(this.providers.entries());
     const availability = await Promise.all(
-      providers.map(async ([name, provider]) => ({
-        name,
-        available: await provider.isAvailable(),
-        type: provider.type,
-      }))
+      providers.map(async ([name, provider]) => {
+        const isAvailable = provider.type === 'external' ? true : await provider.isAvailable();
+        
+        return {
+          name,
+          available: isAvailable,
+          type: provider.type,
+        };
+      })
     );
     return availability;
   }
@@ -105,7 +108,6 @@ export class LLMProviderManager {
   updateConfig(newConfig: Partial<LLMConfig>): void {
     this.config = { ...this.config, ...newConfig };
     
-    // Update provider configurations
     if (newConfig.apiKey) {
       if (this.providers.has('gemini')) {
         this.providers.set('gemini', new GeminiProvider(newConfig.apiKey));
@@ -115,7 +117,7 @@ export class LLMProviderManager {
       }
     }
     if (newConfig.url && this.providers.has('llama')) {
-      this.providers.set('llama', new LlamaProvider());
+      this.providers.set('llama', new LlamaProvider(newConfig.url));
     }
   }
 

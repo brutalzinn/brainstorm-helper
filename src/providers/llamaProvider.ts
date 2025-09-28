@@ -36,9 +36,17 @@ interface LLMProvider {
 export class LlamaProvider implements LLMProvider {
   name = 'Llama (Ollama)';
   type = 'local' as const;
-  baseUrl = 'http://localhost:11434';
+  baseUrl: string;
   models = ['llama3.1', 'llama3.1:8b', 'llama3.1:70b'];
   defaultModel = 'llama3.1';
+
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || 
+      (typeof window !== 'undefined' && import.meta.env.VITE_OLLAMA_URL) ||
+      (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+        ? '/api/llama' 
+        : 'http://localhost:11434');
+  }
 
   async isAvailable(): Promise<boolean> {
     try {

@@ -28,6 +28,8 @@ interface LLMProvider {
   apiKey?: string;
   models: string[];
   defaultModel: string;
+  dynamicModels?: boolean;
+  fetchModels?: () => Promise<string[]>;
   isAvailable: () => Promise<boolean>;
   generate: (request: LLMRequest) => Promise<LLMResponse>;
   generateStream?: (request: LLMRequest) => AsyncGenerator<LLMResponse, void, unknown>;
@@ -40,9 +42,39 @@ export class GeminiProvider implements LLMProvider {
   apiKey?: string;
   models = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-pro'];
   defaultModel = 'gemini-1.5-flash';
+  dynamicModels = true;
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey;
+  }
+
+  async fetchModels(): Promise<string[]> {
+    if (!this.apiKey) {
+      return this.models;
+    }
+    
+    try {
+      const response = await fetch(`${this.baseUrl}/models?key=${this.apiKey}`);
+      if (!response.ok) {
+        return this.models;
+      }
+      const data = await response.json();
+      
+      const geminiModels = data.models
+        ?.filter((model: { name?: string }) => model.name?.includes('gemini'))
+        ?.map((model: { name?: string }) => model.name?.replace('models/', ''))
+        ?.filter((name: string) => name) || [];
+      
+      if (geminiModels.length > 0) {
+        this.models = geminiModels;
+        this.defaultModel = geminiModels[0];
+      }
+      
+      return this.models;
+    } catch (error) {
+      console.error('Error fetching Gemini models:', error);
+      return this.models;
+    }
   }
 
   async isAvailable(): Promise<boolean> {
@@ -83,21 +115,48 @@ export class GeminiProvider implements LLMProvider {
         body: JSON.stringify({
           contents,
           generationConfig: {
-            temperature,
-            maxOutputTokens: maxTokens,
+            temperature: Math.max(0.0, Math.min(1.0, temperature)),
+            maxOutputTokens: Math.min(maxTokens, 8192),
+            topP: 0.8,
+            topK: 40,
           },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API error:', errorData);
         throw new Error(`Gemini API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();
+      console.log('Gemini API response:', data);
+      
       const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!content) {
+        console.error('No content in Gemini response:', data);
+        if (data.candidates?.[0]?.finishReason === 'SAFETY') {
+          throw new Error('Response blocked by safety filters');
+        }
         throw new Error('No response from Gemini API');
       }
 

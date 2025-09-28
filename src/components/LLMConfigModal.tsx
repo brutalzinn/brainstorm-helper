@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Row, Col, Alert, Badge } from 'react-bootstrap';
 import { Settings, Key, Link, Cpu, Thermometer, Hash, Save, TestTube } from 'lucide-react';
 import { LLMProvider, LLMConfig, DEFAULT_PROVIDERS } from '../types/llmConfig';
-import { OllamaService } from '../services/ollamaService';
 
 interface LLMConfigModalProps {
   show: boolean;

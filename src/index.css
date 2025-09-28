@@ -1,6 +1,30 @@
 /* Bootstrap CSS */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
+/* SweetAlert2 Dark Theme */
+.swal2-popup {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.swal2-title {
+  color: #ffffff !important;
+}
+
+.swal2-content {
+  color: #ffffff !important;
+}
+
+.swal2-confirm {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.swal2-cancel {
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+}
+
 /* Force dark theme - More aggressive overrides */
 * {
   box-sizing: border-box;

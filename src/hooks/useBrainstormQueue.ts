@@ -104,7 +104,7 @@ export const useBrainstormQueue = () => {
     pendingMessages: 0,
     ideasGenerated: 0,
   });
-  const [context] = useState<BrainstormContext>({
+  const [context, setContext] = useState<BrainstormContext>({
     conversationHistory: [],
     currentTopic: '',
     generatedIdeas: [],
@@ -124,7 +124,49 @@ export const useBrainstormQueue = () => {
   const [currentProvider, setCurrentProvider] = useState<string>('llama');
   const [availableProviders, setAvailableProviders] = useState<Array<{ name: string; available: boolean; type: 'local' | 'external' }>>([]);
   const [markdownSummary, setMarkdownSummary] = useState<MarkdownSummary | null>(null);
+  const [autoProcess, setAutoProcess] = useState(true);
   const processingRef = useRef(false);
+
+  const STORAGE_KEY = 'brainstorm-helper-data';
+
+  const saveToStorage = useCallback(() => {
+    const dataToSave = {
+      messages,
+      queue,
+      stats,
+      context,
+      agentContext,
+      markdownSummary,
+      currentProvider,
+      autoProcess,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  }, [messages, queue, stats, context, agentContext, markdownSummary, currentProvider, autoProcess]);
+
+  const loadFromStorage = useCallback(() => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.messages) setMessages(parsed.messages.map((msg: Message) => ({ ...msg, timestamp: new Date(msg.timestamp) })));
+        if (parsed.queue) setQueue(parsed.queue.map((item: QueueItem) => ({ ...item, addedAt: new Date(item.addedAt), message: { ...item.message, timestamp: new Date(item.message.timestamp) } })));
+        if (parsed.stats) setStats({ ...parsed.stats, lastProcessedAt: parsed.stats.lastProcessedAt ? new Date(parsed.stats.lastProcessedAt) : undefined });
+        if (parsed.context) setContext({ ...parsed.context, lastContextUpdate: new Date(parsed.context.lastContextUpdate) });
+        if (parsed.agentContext) setAgentContext({ ...parsed.agentContext, lastProcessedAt: new Date(parsed.agentContext.lastProcessedAt) });
+        if (parsed.markdownSummary) setMarkdownSummary(parsed.markdownSummary);
+        if (parsed.currentProvider) setCurrentProvider(parsed.currentProvider);
+        if (typeof parsed.autoProcess === 'boolean') setAutoProcess(parsed.autoProcess);
+      }
+    } catch (error) {
+      console.error('Error loading from localStorage:', error);
+    }
+  }, []);
+
   
   // Initialize LLM Provider Manager and Agent Processor
   const [llmManager] = useState(() => new LLMProviderManager({
@@ -135,6 +177,16 @@ export const useBrainstormQueue = () => {
   }));
   
   const [agentProcessor] = useState(() => new AgentProcessor(llmManager));
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    loadFromStorage();
+  }, [loadFromStorage]);
+
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    saveToStorage();
+  }, [saveToStorage]);
 
   // Add message to queue
   const addMessage = useCallback((content: string) => {
@@ -153,6 +205,7 @@ export const useBrainstormQueue = () => {
       addedAt: new Date(),
     };
 
+    // Always add to queue, even if LLM is currently processing
     setQueue(prev => [...prev, queueItem]);
     setMessages(prev => [...prev, message]);
     setStats(prev => ({
@@ -160,6 +213,8 @@ export const useBrainstormQueue = () => {
       totalMessages: prev.totalMessages + 1,
       pendingMessages: prev.pendingMessages + 1,
     }));
+
+    console.log('Message added to queue. Current processing state:', processingRef.current);
   }, []);
 
   // Check available providers on mount
@@ -269,18 +324,41 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
     } finally {
       processingRef.current = false;
       setIsProcessing(false);
+      
+      // Check for new unprocessed messages after processing is complete
+      setTimeout(() => {
+        setMessages(prev => {
+          const unprocessedMessages = prev.filter(msg => msg.type === 'user' && !msg.processed);
+          if (unprocessedMessages.length > 0) {
+            console.log('Found new unprocessed messages after LLM response:', unprocessedMessages.length);
+            // Add new unprocessed messages to queue
+            const newQueueItems = unprocessedMessages.map(msg => ({
+              id: `queue_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              message: msg,
+              priority: 1,
+              addedAt: new Date(),
+            }));
+            setQueue(prevQueue => [...prevQueue, ...newQueueItems]);
+            setStats(prevStats => ({
+              ...prevStats,
+              pendingMessages: prevStats.pendingMessages + unprocessedMessages.length,
+            }));
+          }
+          return prev;
+        });
+      }, 100); // Small delay to ensure state updates are complete
     }
   }, [queue, agentContext, llmManager]);
 
-  // Auto-process queue when new items are added
+  // Auto-process queue when new items are added (only if auto-process is enabled)
   useEffect(() => {
-    if (queue.length > 0 && !processingRef.current) {
+    if (autoProcess && queue.length > 0 && !processingRef.current) {
       const timer = setTimeout(() => {
         processQueue();
       }, 500); // Process after 0.5 second delay for faster response
       return () => clearTimeout(timer);
     }
-  }, [queue, processQueue]);
+  }, [queue, processQueue, autoProcess]);
 
   // Switch provider
   const switchProvider = useCallback((providerName: string) => {
@@ -424,12 +502,15 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
     currentProvider,
     availableProviders,
     markdownSummary,
+    autoProcess,
     addMessage,
     generateBrainstorm: generateMarkdownSummary,
     switchProvider,
     updateApiKey,
     removeMessage,
     moveMessageUp,
+    toggleAutoProcess: () => setAutoProcess(prev => !prev),
+    processQueue,
   };
 };
 
