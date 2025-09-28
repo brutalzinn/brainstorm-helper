@@ -361,17 +361,9 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
   }, [queue, processQueue, autoProcess]);
 
   // Switch provider
-  const switchProvider = useCallback(async (providerName: string) => {
+  const switchProvider = useCallback((providerName: string) => {
     if (llmManager.setProvider(providerName)) {
       setCurrentProvider(providerName);
-      
-      // Fetch models for dynamic providers
-      try {
-        const models = await llmManager.fetchModelsForProvider(providerName);
-        console.log(`Fetched models for ${providerName}:`, models);
-      } catch (error) {
-        console.warn(`Failed to fetch models for ${providerName}:`, error);
-      }
       
       // Update model to the new provider's default model
       const provider = llmManager.getCurrentProvider();
@@ -390,9 +382,29 @@ Respond naturally and conversationally. Don't use any special formatting or JSON
   }, [llmManager]);
 
   // Update API key for external providers
-  const updateApiKey = useCallback((apiKey: string) => {
+  const updateApiKey = useCallback(async (apiKey: string) => {
     llmManager.updateConfig({ apiKey });
-  }, [llmManager]);
+    
+    // Fetch models for dynamic providers when API key is provided
+    if (apiKey.trim()) {
+      try {
+        const models = await llmManager.fetchModelsForProvider(currentProvider);
+        console.log(`Fetched models for ${currentProvider} with API key:`, models);
+        
+        // Update the provider with the fetched models
+        const provider = llmManager.getCurrentProvider();
+        if (provider && models.length > 0) {
+          // Update the model to the first available model
+          llmManager.updateConfig({
+            model: models[0]
+          });
+          console.log('Updated model to:', models[0]);
+        }
+      } catch (error) {
+        console.warn(`Failed to fetch models for ${currentProvider}:`, error);
+      }
+    }
+  }, [llmManager, currentProvider]);
 
   // Remove message from queue
   const removeMessage = useCallback((messageId: string) => {

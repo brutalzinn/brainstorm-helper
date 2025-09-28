@@ -68,7 +68,9 @@ export class GeminiProvider implements LLMProvider {
           model.name?.includes('gemini') && 
           model.supportedGenerationMethods?.includes('generateContent')
         )
-        ?.map((model: { name?: string }) => model.name?.replace('models/', ''))
+        ?.map((model: { name?: string; baseModelId?: string }) => 
+          model.baseModelId || model.name?.replace('models/', '')
+        )
         ?.filter((name: string) => name) || [];
       
       if (geminiModels.length > 0) {
